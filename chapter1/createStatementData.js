@@ -3,6 +3,38 @@ class PerformanceCalculator {
     this.performances = performances;
     this.play = play;
   }
+
+  get amount() {
+    let result = 0;
+    switch (this.play.type) {
+      case "tragedy":
+        result = 40000;
+        if (this.performances.audience > 30) {
+          result += 1000 * (this.performances.audience - 30);
+        }
+        break;
+      case "comedy":
+        result = 30000;
+        if (this.performances.audience > 20) {
+          result += 10000 + 500 * (this.performances.audience - 20);
+        }
+        result += 300 * this.performances.audience;
+        break;
+      default:
+        throw new Error(`알 수 없는 장르: ${this.play.type}`);
+    }
+    return result;
+  }
+
+  get volumeCreadits() {
+    let result = 0;
+    //포인트 적립
+    result += Math.max(this.performances.audience - 30, 0);
+    //희극 관객 5명마다 추가 포인트를 제공한다.
+    if ("comedy" === this.play.type)
+      result += Math.floor(this.performances.audience / 5);
+    return result;
+  }
 }
 
 module.exports = function createStatementData(invoice, plays) {
@@ -20,43 +52,17 @@ module.exports = function createStatementData(invoice, plays) {
     );
     const result = Object.assign({}, aPerfomance);
     result.play = calculator.play;
-    result.amount = amountFor(result);
-    result.volumeCreadits = volumeCreadits(result);
+    result.amount = calculator.amount;
+    result.volumeCreadits = calculator.volumeCreadits;
     return result;
   }
   function playFor(aPerfomance) {
     return plays[aPerfomance.playID];
   }
   function amountFor(aPerfomance) {
-    let result = 0;
-    switch (aPerfomance.play.type) {
-      case "tragedy":
-        result = 40000;
-        if (aPerfomance.audience > 30) {
-          result += 1000 * (aPerfomance.audience - 30);
-        }
-        break;
-      case "comedy":
-        result = 30000;
-        if (aPerfomance.audience > 20) {
-          result += 10000 + 500 * (aPerfomance.audience - 20);
-        }
-        result += 300 * aPerfomance.audience;
-        break;
-      default:
-        throw new Error(`알 수 없는 장르: ${aPerfomance.play.type}`);
-    }
-    return result;
+    return new PerformanceCalculator(aPerfomance, playFor[aPerfomance]).amount;
   }
-  function volumeCreadits(aPerfomance) {
-    let result = 0;
-    //포인트 적립
-    result += Math.max(aPerfomance.audience - 30, 0);
-    //희극 관객 5명마다 추가 포인트를 제공한다.
-    if ("comedy" === aPerfomance.play.type)
-      result += Math.floor(aPerfomance.audience / 5);
-    return result;
-  }
+  function volumeCreadits(aPerfomance) {}
   function totalAmount(data) {
     return data.performances.reduce((total, p) => total + p.amount, 0);
   }
