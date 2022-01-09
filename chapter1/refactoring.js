@@ -3,18 +3,20 @@ const invoices = fs.readFileSync("invoices.json", "utf-8");
 const plays = fs.readFileSync("plays.json", "utf-8");
 
 function statement(invoice, plays) {
-  let result = `청구 내역 (고객명: ${invoice.customer})\n`;
+  return rederPlainText(invoice, plays);
+}
 
+function rederPlainText(invoice, plays) {
+  let result = `청구 내역 (고객명: ${invoice.customer})\n`;
   for (let perf of invoice.performances) {
     result += ` ${playFor(perf).name}: ${usd(amountFor(perf))} (${
       perf.audience
     })석\n`;
   }
-
   result += `총액 : ${usd(totalAmount())}\n`;
   result += `적립 포인트 : ${totalVolumeCreadits()}점\n`;
-  console.log(result);
-
+  return result;
+  //   console.log(result);
   function totalAmount() {
     let result = 0;
     for (let perf of invoice.performances) {
@@ -22,7 +24,6 @@ function statement(invoice, plays) {
     }
     return result;
   }
-
   function totalVolumeCreadits() {
     let result = 0;
     for (let perf of invoice.performances) {
@@ -30,7 +31,6 @@ function statement(invoice, plays) {
     }
     return result;
   }
-
   function usd(aNumber) {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -38,7 +38,6 @@ function statement(invoice, plays) {
       minimumFractionDigits: 2,
     }).format(aNumber / 100);
   }
-
   function volumeCreadits(aPerfomance) {
     let result = 0;
     //포인트 적립
@@ -48,14 +47,11 @@ function statement(invoice, plays) {
       result += Math.floor(aPerfomance.audience / 5);
     return result;
   }
-
   function playFor(aPerfomance) {
     return plays[aPerfomance.playID];
   }
-
   function amountFor(aPerfomance) {
     let result = 0;
-
     switch (playFor(aPerfomance).type) {
       case "tragedy":
         result = 40000;
@@ -73,11 +69,10 @@ function statement(invoice, plays) {
       default:
         throw new Error(`알 수 없는 장르: ${playFor(aPerfomance).type}`);
     }
-
     return result;
   }
 }
 
 (function main() {
-  statement(JSON.parse(invoices)[0], JSON.parse(plays));
+  console.log(statement(JSON.parse(invoices)[0], JSON.parse(plays)));
 })();
