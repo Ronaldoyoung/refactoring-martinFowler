@@ -3,12 +3,16 @@ const invoices = fs.readFileSync("invoices.json", "utf-8");
 const plays = fs.readFileSync("plays.json", "utf-8");
 
 function statement(invoice, plays) {
+  return rederPlainText(createStatementData(invoice, plays));
+}
+
+function createStatementData(invoice, plays) {
   const statementData = {};
   statementData.customer = invoice.customer;
   statementData.performances = invoice.performances.map(enrichPerformance);
   statementData.totalAmount = totalAmount(statementData);
   statementData.totalVolumeCreadits = totalVolumeCreadits(statementData);
-  return rederPlainText(statementData, invoice, plays);
+  return statementData;
 
   function enrichPerformance(aPerfomance) {
     const result = Object.assign({}, aPerfomance);
@@ -51,11 +55,7 @@ function statement(invoice, plays) {
     return result;
   }
   function totalAmount(data) {
-    let result = 0;
-    for (let perf of data.performances) {
-      result += perf.amount;
-    }
-    return result;
+    return data.performances.reduce((total, p) => total + p.amount, 0);
   }
   function totalVolumeCreadits(data) {
     let result = 0;
@@ -66,7 +66,7 @@ function statement(invoice, plays) {
   }
 }
 
-function rederPlainText(data, invoice, plays) {
+function rederPlainText(data) {
   let result = `청구 내역 (고객명: ${data.customer})\n`;
   for (let perf of data.performances) {
     result += ` ${perf.play.name}: ${usd(perf.amount)} (${perf.audience})석\n`;
